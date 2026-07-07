@@ -67,6 +67,35 @@ namespace PostmarkDotNet
         {
             return await ProcessRequestAsync<PostmarkMessage[], PostmarkResponse[]>("/email/batch", HttpMethod.Post, messages);
         }
+
+        /// <summary>
+        /// Sends a bulk email through the Postmark API (POST /email/bulk).
+        /// This endpoint is intended for broadcast/marketing sends (newsletters, announcements) and is
+        /// distinct from the transactional batch endpoints. A single message definition is supplied,
+        /// and each entry in <see cref="PostmarkBulkMessage.Messages"/> provides its own recipient
+        /// addressing and per-recipient template values. Postmark accepts an unlimited number of
+        /// recipients per call, subject to the 50 MB total payload limit.
+        /// </summary>
+        /// <param name="message">A prepared bulk message.</param>
+        /// <returns>The initial status of the accepted bulk request, including the id
+        /// (<see cref="PostmarkBulkEmailStatus.Id"/>) used to track its progress.</returns>
+        /// <seealso cref="GetBulkEmailStatusAsync"/>
+        public async Task<PostmarkBulkEmailStatus> SendBulkEmailAsync(PostmarkBulkMessage message)
+        {
+            return await ProcessRequestAsync<PostmarkBulkMessage, PostmarkBulkEmailStatus>("/email/bulk", HttpMethod.Post, message);
+        }
+
+        /// <summary>
+        /// Retrieves the status/progress of a previously submitted bulk email request
+        /// (GET /email/bulk/{bulk-request-id}).
+        /// </summary>
+        /// <param name="bulkRequestId">The id returned from <see cref="SendBulkEmailAsync"/>.</param>
+        /// <returns>The current status and completion progress of the bulk request.</returns>
+        /// <seealso cref="SendBulkEmailAsync"/>
+        public async Task<PostmarkBulkEmailStatus> GetBulkEmailStatusAsync(string bulkRequestId)
+        {
+            return await ProcessNoBodyRequestAsync<PostmarkBulkEmailStatus>("/email/bulk/" + bulkRequestId);
+        }
         #endregion
 
         #region Bounces
